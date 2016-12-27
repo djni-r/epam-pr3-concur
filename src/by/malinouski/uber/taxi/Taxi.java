@@ -7,10 +7,10 @@
  */
 package by.malinouski.uber.taxi;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
+import by.malinouski.uber.generator.IdGenerator;
 import by.malinouski.uber.location.Location;
+import by.malinouski.uber.taxi.state.AvailableTaxiState;
+import by.malinouski.uber.taxi.state.TaxiState;
 
 /**
  * 
@@ -22,11 +22,13 @@ import by.malinouski.uber.location.Location;
 public class Taxi {
 
     private long taxiId;
-    private TaxiState state;
+    private TaxiState taxiState;
     private Location location;
+    private Location targetLocation;
     
     public Taxi() {
-        // TODO Auto-generated constructor stub
+        taxiId = IdGenerator.generateTaxiId();
+        taxiState = new AvailableTaxiState();
     }
     
     public Location getLocation() {
@@ -37,20 +39,31 @@ public class Taxi {
         this.location = location;
     }
     
-    public TaxiState getState() {
-        return state;
+    public Location getTargetLocation() {
+        return targetLocation;
     }
     
-    public void setState(TaxiState state) {
-        this.state = state;
+    public void setTargetLocation(Location targetLocation) {
+        this.targetLocation = targetLocation;
+    }
+    
+    public TaxiState getTaxiState() {
+        return taxiState;
+    }
+    
+    public void setTaxiState(TaxiState state) {
+        this.taxiState = state;
     }
     
     public long getTaxiId() {
         return taxiId;
     }
     
-    public void setTaxiId(long taxiId) {
-        this.taxiId = taxiId;
+    
+    @Override
+    public String toString() {
+        // TODO Auto-generated method stub
+        return String.format("Taxi: id %s, location %s", taxiId, location);
     }
     
 }

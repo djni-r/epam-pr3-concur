@@ -1,9 +1,7 @@
 package by.malinouski.uber.runner;
 
-import by.malinouski.uber.client.Acceptor;
-import by.malinouski.uber.client.Caller;
-import by.malinouski.uber.client.Client;
-import by.malinouski.uber.taxi.Taxi;
+import by.malinouski.uber.generator.ClientActivityGenerator;
+import by.malinouski.uber.manager.Manager;
 
 public class UberRunner {
 
@@ -12,16 +10,11 @@ public class UberRunner {
     }
     
     public static void main(String[] args) {
-        new Thread() { 
-            public void run() {
-                Client client = new Client();
-                Taxi taxi = new Caller().askTaxiFor(client);
-                new Acceptor().accept(client, taxi);
-                
-                // TODO continue
-            }
-            
-        }.start();
+        
+        Manager manager = Manager.getInstance();
+        manager.initTaxis(10);
+        
+        ClientActivityGenerator.generateClientActivity(8);
     }
 
 }

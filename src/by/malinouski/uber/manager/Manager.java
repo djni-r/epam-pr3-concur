@@ -8,15 +8,22 @@
  */
 package by.malinouski.uber.manager;
 
-import java.util.Collection;
-import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import by.malinouski.uber.client.Client;
 import by.malinouski.uber.distance.Calculator;
-import by.malinouski.uber.taxi.Driver;
+import by.malinouski.uber.generator.LocationGenerator;
+import by.malinouski.uber.manager.exception.NotSupportedManagerOperation;
 import by.malinouski.uber.taxi.Taxi;
+import by.malinouski.uber.taxi.TaxiThread;
+import by.malinouski.uber.taxi.state.ArrivingTaxiState;
+import by.malinouski.uber.taxi.state.BusyTaxiState;
 
 /**
  * Singleton class, which purpose is to mediate between Client and Taxi
@@ -25,15 +32,32 @@ import by.malinouski.uber.taxi.Taxi;
  */
 public class Manager {
 
+    static final Logger LOGGER = LogManager.getLogger();
     private static Manager instance = null;
-    private Collection<Taxi> taxis = new ConcurrentSkipListSet<>(); // gotta decide which collection to use
-    private Lock lock = new ReentrantLock();
+    private static boolean instanceCreated = false; 
+    private static Lock lock = new ReentrantLock();
+    private Calculator calculator = new Calculator();
+    private Set<Taxi> taxis = new HashSet<>();
 
     private Manager() {
     }
 
     public static Manager getInstance() {
         // TODO
+        if (!instanceCreated) {
+            lock.lock();
+            try {
+                if (!instanceCreated) {
+                    instance = new Manager();
+                    instanceCreated = true;
+                }
+            } catch (Exception e) {
+                LOGGER.fatal("Could not create Manager instance");
+                throw new RuntimeException();
+            } finally {
+                lock.unlock();
+            }
+        }
         return instance;
     }
     
@@ -41,6 +65,20 @@ public class Manager {
         try {
             lock.lock();
             taxis.add(taxi);
+            LOGGER.info("Added taxi: " + taxi);
+        } finally {
+            lock.unlock();
+        }
+    }
+    
+    public void initTaxis(int number) {
+        try {
+            lock.lock();
+            for (int i = 0; i < number; i++) {
+                Taxi taxi = new Taxi();
+                taxi.setLocation(LocationGenerator.generateLocation());
+                taxis.add(taxi);
+            }
         } finally {
             lock.unlock();
         }
@@ -49,20 +87,31 @@ public class Manager {
     public Taxi chooseTaxiFor(Client client) {
         try {
             lock.lock();
-            Calculator calc = new Calculator();
             
             // get the right taxi
-            return calc.calcBestValue(taxis, client);
+            LOGGER.debug("In chooseTaxiFor: client location " + client.getLocation());
+            Taxi taxi = calculator.calcBestValue(taxis, client);
+            new TaxiThread(taxi, client).start();
+            taxi.setTaxiState(new ArrivingTaxiState(checkTime(client, taxi)));
+            return taxi;
         } finally {
             lock.unlock();
         }
     }
     
-    public void sendTaxi(Client client, Taxi taxi) {
-        Driver driver = new Driver();
-        driver.pickClientUp(client, taxi);
+
+    public void pickClientUp(Client client, Taxi taxi) throws NotSupportedManagerOperation {
+        if (!taxi.getTaxiState().isReady()) {
+            throw new NotSupportedManagerOperation("Taxi is not ready");
+        }
         
-        // TODO
-        throw new RuntimeException("Not yet implemented");
+        taxi.setTaxiState(new BusyTaxiState(checkTime(client, taxi)));
+        
+    }
+
+    public int checkTime(Client client, Taxi taxi) {
+        // TODO Auto-generated method stub
+        return calculator.calcTimeDistance(
+                taxi.getLocation(), client.getLocation()).getMinutes();
     }
 }
