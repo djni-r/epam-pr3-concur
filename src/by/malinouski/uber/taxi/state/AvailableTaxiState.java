@@ -17,12 +17,6 @@ public class AvailableTaxiState implements TaxiState {
     }
 
     @Override
-    public int minutesTillEnd() {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
     public boolean isAvailable() {
         // TODO Auto-generated method stub
         return true;
@@ -38,6 +32,11 @@ public class AvailableTaxiState implements TaxiState {
     public boolean isDone() {
         // TODO Auto-generated method stub
         return false;
+    }
+    
+    @Override 
+    public String toString() {
+        return "Available";
     }
 
 }

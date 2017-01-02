@@ -23,11 +23,53 @@ import by.malinouski.uber.taxi.Taxi;
 public class Calculator {
 
     final static Logger LOGGER = LogManager.getLogger();
-    private static int SPEED = 1000; // meters/min 
+    private static double SPEED = 1000.0; // meters/min 
+    private static double EARTH_RADIUS = 6371e3;
     public Calculator() {
         // TODO Auto-generated constructor stub
     }
 
+    
+    /*
+     * !! Returns null if taxis is empty
+     */
+    public Taxi calcBestValue(Collection<Taxi> taxis, Client client) {
+        LOGGER.debug("In calcBestValue");
+        TimeDistance bestTimeDist = null;
+        TimeDistance timeDist = null;
+        Taxi bestTaxi = null;
+        
+        for (Taxi taxi : taxis) { 
+            if (taxi.getTaxiState().isAvailable()
+                && (bestTimeDist == null 
+                    || (timeDist = calcTimeDistance(taxi.getLocation(), 
+                            client.getLocation())).compareTo(bestTimeDist) < 0)) {
+                     
+                bestTimeDist = timeDist; 
+                bestTaxi = taxi; 
+            }
+        }
+        
+//        /* POSSIBLE OPTIMIZATION FOR FUTURE: 
+//         * if no taxi is available (which shouldn't happen very often, 
+//         * see which one is best with the time left until it will be available
+//         */
+//        if (bestTaxi == null) {
+//            for (Taxi taxi : taxis) {
+//                timeDist = addTimeDistances(
+//                        calcTimeDistance(taxi.getLocation(), taxi.getTargetLocation()),
+//                        calcTimeDistance(taxi.getTargetLocation(), client.getLocation()));
+//                
+//                if (bestTimeDist == null || timeDist.compareTo(bestTimeDist) < 0) {
+//                    bestTimeDist = timeDist;
+//                    bestTaxi = taxi;
+//                }
+//            }
+//        }
+//        
+        return bestTaxi;
+    }
+    
     /**
      * Calculates distance between two locations
      */
@@ -41,39 +83,15 @@ public class Calculator {
         return new TimeDistance((int) distance, SPEED);
     }
     
-    /*
-     * !! Returns null if taxis is empty
-     */
-    public Taxi calcBestValue(Collection<Taxi> taxis, Client client) {
-        LOGGER.debug("In calcBestValue");
-        TimeDistance bestTimeDist = null;
-        Taxi bestTaxi = null;
-        for (Taxi taxi : taxis) { 
-            if (taxi.getTaxiState().isAvailable()) {
-            TimeDistance timeDist = calcTimeDistance(taxi.getLocation(), client.getLocation());
-            /* OPTIMIZATION: if taxi is not available, see if it's still best
-             * with the time left until it will be available
-             */
-//            if (!taxi.getTaxiState().isAvailable()) {
-//                timeDist.setMeters(
-//                        calcTimeDistance(taxi.getLocation(), taxi.getTargetLocation()).getMeters() + 
-//                        calcTimeDistance(taxi.getTargetLocation(), client.getTargetLocation()).getMeters());
-//                timeDist.setMinutes(timeDist.getMinutes() + taxi.getTaxiState().minutesTillEnd());
-//            }
-            
-            if (bestTimeDist == null || timeDist.compareTo(bestTimeDist) < 0) {
-                bestTimeDist = timeDist; 
-                bestTaxi = taxi; 
-            }
-            }
-        }
+    public TimeDistance addTimeDistances(TimeDistance td1, TimeDistance td2) {
+        int meters = td1.getMeters() + td2.getMeters();
+        int minutes = td1.getMinutes() + td2.getMinutes();
         
-        return bestTaxi;
+        return new TimeDistance(meters, minutes);
     }
     
     // http://www.movable-type.co.uk/scripts/latlong.html
     private double calcDistance(double lat1, double lon1, double lat2, double lon2) {
-         double earthR = 6371e3;
          double lat1Radian = Math.toRadians(lat1);
          double lat2Radian = Math.toRadians(lat2);
          double latDiff = Math.toRadians(lat2 - lat1);
@@ -85,9 +103,9 @@ public class Calculator {
          
          double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
          
-         double d = earthR * c;
+         double distance = EARTH_RADIUS * c;
          
-         return d;
+         return distance;
          
     }
 }

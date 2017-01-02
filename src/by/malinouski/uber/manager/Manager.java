@@ -18,12 +18,9 @@ import org.apache.logging.log4j.Logger;
 
 import by.malinouski.uber.client.Client;
 import by.malinouski.uber.distance.Calculator;
-import by.malinouski.uber.generator.LocationGenerator;
-import by.malinouski.uber.manager.exception.NotSupportedManagerOperation;
 import by.malinouski.uber.taxi.Taxi;
 import by.malinouski.uber.taxi.TaxiThread;
 import by.malinouski.uber.taxi.state.ArrivingTaxiState;
-import by.malinouski.uber.taxi.state.BusyTaxiState;
 
 /**
  * Singleton class, which purpose is to mediate between Client and Taxi
@@ -43,7 +40,6 @@ public class Manager {
     }
 
     public static Manager getInstance() {
-        // TODO
         if (!instanceCreated) {
             lock.lock();
             try {
@@ -71,47 +67,28 @@ public class Manager {
         }
     }
     
-    public void initTaxis(int number) {
-        try {
-            lock.lock();
-            for (int i = 0; i < number; i++) {
-                Taxi taxi = new Taxi();
-                taxi.setLocation(LocationGenerator.generateLocation());
-                taxis.add(taxi);
-            }
-        } finally {
-            lock.unlock();
-        }
-    }
-    
     public Taxi chooseTaxiFor(Client client) {
         try {
             lock.lock();
-            
-            // get the right taxi
             LOGGER.debug("In chooseTaxiFor: client location " + client.getLocation());
+
             Taxi taxi = calculator.calcBestValue(taxis, client);
+            
+            LOGGER.info(String.format("Client %d got taxi %d.\nTime to arrival %d min", 
+                    client.getClientId(), 
+                    taxi.getTaxiId(), 
+                    calculator.calcTimeDistance(
+                            taxi.getLocation(), client.getLocation()).getMinutes()));
+            
+            
+            // taxi's targetLocation is now the client's location
+            taxi.setTargetLocation(client.getTargetLocation());
+            
             new TaxiThread(taxi, client).start();
-            taxi.setTaxiState(new ArrivingTaxiState(checkTime(client, taxi)));
+            taxi.setTaxiState(new ArrivingTaxiState());
             return taxi;
         } finally {
             lock.unlock();
         }
-    }
-    
-
-    public void pickClientUp(Client client, Taxi taxi) throws NotSupportedManagerOperation {
-        if (!taxi.getTaxiState().isReady()) {
-            throw new NotSupportedManagerOperation("Taxi is not ready");
-        }
-        
-        taxi.setTaxiState(new BusyTaxiState(checkTime(client, taxi)));
-        
-    }
-
-    public int checkTime(Client client, Taxi taxi) {
-        // TODO Auto-generated method stub
-        return calculator.calcTimeDistance(
-                taxi.getLocation(), client.getLocation()).getMinutes();
     }
 }

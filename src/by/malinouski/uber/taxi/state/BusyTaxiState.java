@@ -3,7 +3,6 @@
  */
 package by.malinouski.uber.taxi.state;
 
-import java.time.LocalTime;
 
 /**
  * @author makarymalinouski
@@ -11,20 +10,21 @@ import java.time.LocalTime;
  */
 public class BusyTaxiState implements TaxiState {
 
-    private static final int MINUTES_IN_HOUR = 60;
-    private LocalTime endTime; 
-    /* (non-Javadoc)
-     * @see by.malinouski.uber.taxi.state.TaxiState#howLong()
-     */
-    public BusyTaxiState(int minutesTillEnd) {
-        endTime = LocalTime.now().plusMinutes(minutesTillEnd);
-    }
-    @Override
-    public int minutesTillEnd() {
-        LocalTime now = LocalTime.now();
-        return (endTime.getHour() - now.getHour()) * MINUTES_IN_HOUR + 
-                endTime.getMinute() - now.getMinute();
-    }
+//    private static final int MINUTES_IN_HOUR = 60;
+//    private LocalTime endTime; 
+//    /* (non-Javadoc)
+//     * @see by.malinouski.uber.taxi.state.TaxiState#howLong()
+//     */
+//    public BusyTaxiState(int minutesTillEnd) {
+//        endTime = LocalTime.now().plusMinutes(minutesTillEnd);
+//    }
+//    
+//    @Override
+//    public int minutesTillEnd() {
+//        LocalTime now = LocalTime.now();
+//        return (endTime.getHour() - now.getHour()) * MINUTES_IN_HOUR + 
+//                endTime.getMinute() - now.getMinute();
+//    }
 
     @Override
     public boolean isAvailable() {

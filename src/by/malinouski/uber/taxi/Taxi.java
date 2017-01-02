@@ -15,7 +15,10 @@ import by.malinouski.uber.taxi.state.TaxiState;
 /**
  * 
  * This is an entity class Taxi which represents a certain taxi
- * which has id, location, and a certain state
+ * which has id, location, and a certain state. 
+ * The id is unique and can't be set (for simplicity).
+ * Hence each taxi created is unique, 
+ * so it does not overrides equals and hashcode 
  *
  * @author makarymalinouski
  */
@@ -62,7 +65,6 @@ public class Taxi {
     
     @Override
     public String toString() {
-        // TODO Auto-generated method stub
         return String.format("Taxi: id %s, location %s", taxiId, location);
     }
     

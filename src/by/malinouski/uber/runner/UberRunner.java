@@ -1,20 +1,17 @@
 package by.malinouski.uber.runner;
 
 import by.malinouski.uber.generator.ClientActivityGenerator;
-import by.malinouski.uber.manager.Manager;
+import by.malinouski.uber.generator.TaxiGenerator;
+import by.malinouski.uber.generator.TimeCountGenerator;
 
 public class UberRunner {
 
-    public UberRunner() {
-        // TODO Auto-generated constructor stub
-    }
-    
     public static void main(String[] args) {
         
-        Manager manager = Manager.getInstance();
-        manager.initTaxis(10);
+        TaxiGenerator.generateTaxis(5);
         
-        ClientActivityGenerator.generateClientActivity(8);
+        ClientActivityGenerator.generateClientActivity(4);
+        
+        TimeCountGenerator.generateTimeCount();
     }
-
 }

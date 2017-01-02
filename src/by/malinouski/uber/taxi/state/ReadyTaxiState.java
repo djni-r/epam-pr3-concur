@@ -9,14 +9,6 @@ package by.malinouski.uber.taxi.state;
  */
 public class ReadyTaxiState implements TaxiState {
 
-    /* (non-Javadoc)
-     * @see by.malinouski.uber.taxi.state.TaxiState#howLong()
-     */
-    @Override
-    public int minutesTillEnd() {
-        // TODO Auto-generated method stub
-        return 0;
-    }
 
     @Override
     public boolean isAvailable() {
@@ -34,6 +26,11 @@ public class ReadyTaxiState implements TaxiState {
     public boolean isDone() {
         // TODO Auto-generated method stub
         return false;
+    }
+    
+    @Override
+    public String toString() {
+        return "Ready";
     }
 
 }
