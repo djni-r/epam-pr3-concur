@@ -4,6 +4,8 @@
 package by.malinouski.uber.taxi;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -11,6 +13,9 @@ import org.apache.logging.log4j.Logger;
 import by.malinouski.uber.client.Client;
 import by.malinouski.uber.distance.Calculator;
 import by.malinouski.uber.location.Location;
+import by.malinouski.uber.manager.Manager;
+import by.malinouski.uber.taxi.state.ArrivingTaxiState;
+import by.malinouski.uber.taxi.state.AvailableTaxiState;
 import by.malinouski.uber.taxi.state.ReadyTaxiState;
 
 /**
@@ -23,8 +28,9 @@ import by.malinouski.uber.taxi.state.ReadyTaxiState;
 public class TaxiThread extends Thread {
 
     static final Logger LOGGER = LogManager.getLogger(); 
-
+    private static Manager manager = Manager.getInstance();
     private Taxi taxi;
+    private final Lock lock = new ReentrantLock(); 
     private Client client;
     
     public TaxiThread(Taxi taxi, Client client) {
@@ -35,17 +41,31 @@ public class TaxiThread extends Thread {
     
     
     public void run() {
-        LOGGER.info("Taxi " + taxi.getTaxiId() + " started moving\n");
+        lock.lock();
+        while (!taxi.getTaxiState().isAvailable()) {
+            try {
+                TimeUnit.MILLISECONDS.sleep(100);
+            } catch (InterruptedException e) {
+                LOGGER.error(e.getMessage());
+            }
+        }
+        
+        manager.freeCondition(taxi, client);
+        LOGGER.debug("TAXI THREAD " + taxi.getTaxiId());
+        lock.unlock();
+        
         move(taxi.getLocation(), client.getLocation());
         taxi.setTaxiState(new ReadyTaxiState());
-        LOGGER.info("Ready to pick client up\n");
-
-     // taxi's targetLocation is not client's targetLocation
-        taxi.setTargetLocation(client.getTargetLocation());
+        LOGGER.info(String.format("Ready to pick client %d up\n", 
+                                  client.getClientId()));
+        
+        // taxi's targetLocation is now client's targetLocation
+//        taxi.setTargetLocation(client.getTargetLocation());
         
         move(taxi.getLocation(), client.getTargetLocation());
-        LOGGER.info("Brought client to target location\n");
-        
+        LOGGER.info(String.format("Brought client %d to target location\n",
+                                    client.getClientId()));
+        taxi.setTaxiState(new AvailableTaxiState());
     }
 
     /* fake calculation to immitate taxi movement
@@ -55,7 +75,8 @@ public class TaxiThread extends Thread {
     private void move(Location from, Location to) {
         int timePassed = 0;
         int timeWillTake = new Calculator().calcTimeDistance(from, to).getMinutes();
-        Location deltaLocation = deltaLocation(from, to, timeWillTake);
+        LOGGER.debug("TIMEWILLTAKE " + timeWillTake);
+        Location deltaLocation = deltaLocation(from, to, timeWillTake != 0 ? timeWillTake : 1);
         double deltaLong = deltaLocation.getLongitude();
         double deltaLat = deltaLocation.getLatitude();
         

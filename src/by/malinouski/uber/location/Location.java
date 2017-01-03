@@ -9,9 +9,6 @@ public class Location {
     private double latitude;
     private double longitude;
 
-    public Location() {
-        // TODO Auto-generated constructor stub
-    }
     
     public Location(double latitude, double longitude) {
 //        BigDecimal bigDec = new BigDecimal(longitude);

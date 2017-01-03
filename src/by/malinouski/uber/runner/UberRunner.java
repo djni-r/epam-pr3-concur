@@ -8,7 +8,7 @@ public class UberRunner {
 
     public static void main(String[] args) {
         
-        TaxiGenerator.generateTaxis(5);
+        TaxiGenerator.generateTaxis(2);
         
         ClientActivityGenerator.generateClientActivity(4);
         

@@ -7,6 +7,7 @@
  */
 package by.malinouski.uber.taxi;
 
+import by.malinouski.uber.distance.TimeDistance;
 import by.malinouski.uber.generator.IdGenerator;
 import by.malinouski.uber.location.Location;
 import by.malinouski.uber.taxi.state.AvailableTaxiState;
@@ -28,10 +29,13 @@ public class Taxi {
     private TaxiState taxiState;
     private Location location;
     private Location targetLocation;
+    private Location finalTargetLocation;
+    private TimeDistance totalTimeDistance;
     
     public Taxi() {
         taxiId = IdGenerator.generateTaxiId();
         taxiState = new AvailableTaxiState();
+        totalTimeDistance = new TimeDistance(0, 0);
     }
     
     public Location getLocation() {
@@ -61,11 +65,26 @@ public class Taxi {
     public long getTaxiId() {
         return taxiId;
     }
+
+    public TimeDistance getTotalTimeDistance() {
+        return totalTimeDistance;
+    }
     
+    public void setTotalTimeDistance(TimeDistance totalTimeDistance) {
+        this.totalTimeDistance = totalTimeDistance;
+    }
+    
+    public Location getFinalTargetLocation() {
+        return finalTargetLocation;
+    }
+    
+    public void setFinalTargetLocation(Location finalTargetLocation) {
+        this.finalTargetLocation = finalTargetLocation;
+    }
     
     @Override
     public String toString() {
         return String.format("Taxi: id %s, location %s", taxiId, location);
     }
-    
+
 }

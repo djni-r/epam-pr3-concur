@@ -34,7 +34,7 @@ public class ClientThread extends Thread {
             }
         }
         
-        LOGGER.info("Got into taxi. Riding");
+        LOGGER.info(String.format("Got into taxi %d. Riding", taxi.getTaxiId()));
         taxi.setTaxiState(new BusyTaxiState());
     }
 }

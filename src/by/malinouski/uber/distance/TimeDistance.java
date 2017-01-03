@@ -48,17 +48,23 @@ public class TimeDistance implements Comparable<TimeDistance> {
     }
     
     
-    /*
-     * (non-Javadoc)
-     * @see java.lang.Comparable#compareTo(java.lang.Object)
-     * NEED TO IMPLEMENT!!!
-     */
     @Override
     public int compareTo(TimeDistance o) {
-        // TODO Auto-generated method stub
-//        double a = minutes + minutes * meters / 100.0;
-        return Integer.valueOf(minutes).compareTo(
-               Integer.valueOf(o.getMinutes()));
+        /* if Location was based on real data, than
+         * comparation would have to take into account distance,
+         * but since now, distance is directly proportional to time
+         * this will do */
+        if (o == null) {
+            return -1;
+        } else {
+            return Integer.valueOf(minutes).compareTo(
+                   Integer.valueOf(o.getMinutes()));
+        }
+    }
+    
+    @Override
+    public String toString() {
+        return String.format("%d minutes, %d meters", minutes, meters);
     }
     
 }

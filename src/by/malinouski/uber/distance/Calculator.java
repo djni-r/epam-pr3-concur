@@ -25,9 +25,6 @@ public class Calculator {
     final static Logger LOGGER = LogManager.getLogger();
     private static double SPEED = 1000.0; // meters/min 
     private static double EARTH_RADIUS = 6371e3;
-    public Calculator() {
-        // TODO Auto-generated constructor stub
-    }
 
     
     /*
@@ -42,31 +39,38 @@ public class Calculator {
         for (Taxi taxi : taxis) { 
             if (taxi.getTaxiState().isAvailable()
                 && (bestTimeDist == null 
-                    || (timeDist = calcTimeDistance(taxi.getLocation(), 
-                            client.getLocation())).compareTo(bestTimeDist) < 0)) {
-                     
+                    | (timeDist = calcTimeDistance(taxi.getLocation(), client.getLocation()))
+                        .compareTo(bestTimeDist) < 0)) {
+                
                 bestTimeDist = timeDist; 
-                bestTaxi = taxi; 
+                bestTaxi = taxi;
             }
         }
         
-//        /* POSSIBLE OPTIMIZATION FOR FUTURE: 
-//         * if no taxi is available (which shouldn't happen very often, 
-//         * see which one is best with the time left until it will be available
-//         */
-//        if (bestTaxi == null) {
-//            for (Taxi taxi : taxis) {
-//                timeDist = addTimeDistances(
-//                        calcTimeDistance(taxi.getLocation(), taxi.getTargetLocation()),
-//                        calcTimeDistance(taxi.getTargetLocation(), client.getLocation()));
-//                
-//                if (bestTimeDist == null || timeDist.compareTo(bestTimeDist) < 0) {
-//                    bestTimeDist = timeDist;
-//                    bestTaxi = taxi;
-//                }
-//            }
-//        }
-//        
+        /* OPTIMIZATION: 
+         * if no taxi is available, 
+         * see which one is best with the time left until it will be available
+         */
+        if (bestTaxi == null) {
+            LOGGER.debug("IN if(bestTaxi == null)");
+            for (Taxi taxi : taxis) {
+                timeDist = addTimeDistances(
+                        taxi.getTotalTimeDistance(),
+                        calcTimeDistance(taxi.getFinalTargetLocation(), client.getLocation()));
+                
+                if (bestTimeDist == null || timeDist.compareTo(bestTimeDist) < 0) {
+                    bestTimeDist = timeDist;
+                    bestTaxi = taxi;
+                }
+            }
+            LOGGER.debug("IN calcBestValue: CHOSE " + bestTimeDist);
+        } else {
+            // this is needed for the optimization above
+            bestTaxi.setTotalTimeDistance(
+                    addTimeDistances(bestTaxi.getTotalTimeDistance(), timeDist));
+            bestTaxi.setFinalTargetLocation(client.getTargetLocation());
+        }
+        
         return bestTaxi;
     }
     
