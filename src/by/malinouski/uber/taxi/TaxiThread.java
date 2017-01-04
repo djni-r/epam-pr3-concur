@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 
 import by.malinouski.uber.client.Client;
 import by.malinouski.uber.distance.Calculator;
+import by.malinouski.uber.distance.TimeDistance;
 import by.malinouski.uber.location.Location;
 import by.malinouski.uber.manager.Manager;
 import by.malinouski.uber.taxi.state.ArrivingTaxiState;
@@ -63,7 +64,7 @@ public class TaxiThread extends Thread {
 //        taxi.setTargetLocation(client.getTargetLocation());
         
         move(taxi.getLocation(), client.getTargetLocation());
-        LOGGER.info(String.format("Brought client %d to target location\n",
+        LOGGER.info(String.format("\nBrought client %d to target location\n",
                                     client.getClientId()));
         taxi.setTaxiState(new AvailableTaxiState());
     }

@@ -91,7 +91,7 @@ public class Manager {
                     taxi.getTaxiState().isAvailable() 
                         ? calculator.calcTimeDistance(
                             taxi.getLocation(), client.getLocation())
-                          .getMinutes() 
+                          .getMinutes()
                         : calculator.addTimeDistances(
                                 taxi.getTotalTimeDistance(),
                                 calculator.calcTimeDistance(
@@ -106,7 +106,6 @@ public class Manager {
             } catch (InterruptedException e) {
                 LOGGER.error(e.getMessage());
             }
-//            condition.signal();
             LOGGER.debug("RETURNING TAXI " + taxi.getTaxiId());
             return taxi;
         } finally {

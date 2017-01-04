@@ -48,7 +48,10 @@ public class Calculator {
         }
         
         /* OPTIMIZATION: 
-         * if no taxi is available, 
+         * if no taxi is available, which shouldn't happen too often
+         * (hence it's in a separate loop. Another version could be
+         * to bring this check in the main loop, but it would slow down
+         * the main process)
          * see which one is best with the time left until it will be available
          */
         if (bestTaxi == null) {
@@ -57,19 +60,19 @@ public class Calculator {
                 timeDist = addTimeDistances(
                         taxi.getTotalTimeDistance(),
                         calcTimeDistance(taxi.getFinalTargetLocation(), client.getLocation()));
-                
+                LOGGER.debug(String.format("CHOOSING: taxi %d, %s", taxi.getTaxiId(), timeDist));
                 if (bestTimeDist == null || timeDist.compareTo(bestTimeDist) < 0) {
                     bestTimeDist = timeDist;
                     bestTaxi = taxi;
                 }
             }
             LOGGER.debug("IN calcBestValue: CHOSE " + bestTimeDist);
-        } else {
-            // this is needed for the optimization above
-            bestTaxi.setTotalTimeDistance(
-                    addTimeDistances(bestTaxi.getTotalTimeDistance(), timeDist));
-            bestTaxi.setFinalTargetLocation(client.getTargetLocation());
         }
+        
+        // this is needed for the optimization above
+        bestTaxi.setTotalTimeDistance(
+                addTimeDistances(bestTaxi.getTotalTimeDistance(), bestTimeDist));
+        bestTaxi.setFinalTargetLocation(client.getTargetLocation());
         
         return bestTaxi;
     }
