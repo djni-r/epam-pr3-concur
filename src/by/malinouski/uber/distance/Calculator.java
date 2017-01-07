@@ -32,7 +32,7 @@ public class Calculator {
     /*
      * !! Returns null if taxis is empty
      */
-    public Taxi calcBestValue(Collection<Taxi> taxis, Client client) {
+    public BestValue calcBestValue(Collection<Taxi> taxis, Client client) {
 //        Condition condition = Manager.getInstance().getCondition();
 //        try {
 //                condition.await();
@@ -80,10 +80,15 @@ public class Calculator {
         
         // this is needed for the optimization above
         bestTaxi.setTotalTimeDistance(
-                addTimeDistances(bestTaxi.getTotalTimeDistance(), bestTimeDist));
+                addTimeDistances(bestTimeDist, 
+                                calcTimeDistance(client.getLocation(), 
+                                        client.getTargetLocation())));
+        
+        LOGGER.debug(String.format("BEST_TAXI_%d_TOTAL_TD: %d", 
+                bestTaxi.getTaxiId(), bestTaxi.getTotalTimeDistance().getMinutes()));
         bestTaxi.setFinalTargetLocation(client.getTargetLocation());
         
-        return bestTaxi;
+        return new BestValue(bestTaxi, bestTimeDist);
     }
     
     /**
@@ -104,6 +109,21 @@ public class Calculator {
         int minutes = td1.getMinutes() + td2.getMinutes();
         
         return new TimeDistance(meters, minutes);
+    }
+    
+    
+    public int calcArrivalTime(Taxi taxi, Client client) {
+        /*
+         * if the taxi was chosen first time calc time between
+         * current loc and client's one,
+         * if not take to the account other client's time 
+         */
+        return taxi.getTaxiState().isAvailable()                            
+                ? calcTimeDistance(taxi.getLocation(), client.getLocation())
+                  .getMinutes()
+                : addTimeDistances(taxi.getTotalTimeDistance(),
+                        calcTimeDistance(taxi.getFinalTargetLocation(), client.getLocation()))
+                  .getMinutes();
     }
     
     // http://www.movable-type.co.uk/scripts/latlong.html

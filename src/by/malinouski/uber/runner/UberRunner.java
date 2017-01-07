@@ -8,13 +8,13 @@ public class UberRunner {
 
     public static void main(String[] args) {
         
-        TaxiGenerator.generateTaxis(2);
+        TaxiGenerator.generateTaxis(1);
         
         Thread timeCount = new TimeCountGenerator();
         timeCount.setDaemon(true);
         timeCount.start();
         
-        ClientActivityGenerator.generateClientActivity(4);
+        ClientActivityGenerator.generateClientActivity(3);
         
     }
 }

@@ -31,7 +31,7 @@ public class TaxiThread extends Thread {
     static final Logger LOGGER = LogManager.getLogger(); 
     private static Manager manager = Manager.getInstance();
     private Taxi taxi;
-    private static final Lock lock = new ReentrantLock();//manager.getLock(); 
+    private static final Lock lock = new ReentrantLock(true);//manager.getLock(); 
     private Client client;
     
     public TaxiThread(Taxi taxi, Client client) {
@@ -46,11 +46,11 @@ public class TaxiThread extends Thread {
         lock.lock();
         LOGGER.debug("TAXI THREAD ENTERED LOCK. Count: " 
                      + ((ReentrantLock) lock).getHoldCount());
-
+        
         // if taxi is already busy signal Manager.chooseTaxiFor(), it can proceed
         if (!taxi.getTaxiState().isAvailable()) {
-//            LOGGER.debug("SIGNALLED manager");
-//            manager.getCondition().signal();
+            LOGGER.debug("SIGNALLED manager");
+            manager.freeCondition();
             // wait until taxi is available to start towards client
             // right now if there are 4 clients and 1 taxi, three taxithreads enter here
             while (!taxi.getTaxiState().isAvailable()) {
@@ -67,7 +67,7 @@ public class TaxiThread extends Thread {
             taxi.setTargetLocation(client.getTargetLocation());
             taxi.setTaxiState(new ArrivingTaxiState());
             // the taxi's state changed, so Manager.chooseTaxiFor() can proceed
-//            manager.getCondition().signal();
+            manager.freeCondition();
             lock.unlock();
             LOGGER.debug("TAXI THREAD RELEASING LOCK");
         }
