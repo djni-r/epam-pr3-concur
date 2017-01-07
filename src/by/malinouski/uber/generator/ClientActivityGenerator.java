@@ -2,6 +2,7 @@ package by.malinouski.uber.generator;
 
 import by.malinouski.uber.client.Client;
 import by.malinouski.uber.client.ClientThread;
+import by.malinouski.uber.manager.Manager;
 
 public class ClientActivityGenerator {
 
@@ -10,7 +11,8 @@ public class ClientActivityGenerator {
             Client client = new Client();
             client.setLocation(LocationGenerator.generateLocation());
             client.setTargetLocation(LocationGenerator.generateLocation());
-            new ClientThread(client).start();
+            Manager.getInstance().chooseTaxiFor(client);
+//            new ClientThread(client).start();
         }
     }
 

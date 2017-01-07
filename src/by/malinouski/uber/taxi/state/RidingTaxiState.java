@@ -8,7 +8,7 @@ package by.malinouski.uber.taxi.state;
  * @author makarymalinouski
  *
  */
-public class BusyTaxiState implements TaxiState {
+public class RidingTaxiState implements TaxiState {
 
 //    private static final int MINUTES_IN_HOUR = 60;
 //    private LocalTime endTime; 

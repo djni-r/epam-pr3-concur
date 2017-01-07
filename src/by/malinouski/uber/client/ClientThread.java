@@ -1,17 +1,20 @@
 package by.malinouski.uber.client;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import by.malinouski.uber.manager.Manager;
 import by.malinouski.uber.taxi.Taxi;
-import by.malinouski.uber.taxi.state.BusyTaxiState;
+import by.malinouski.uber.taxi.state.RidingTaxiState;
 
 public class ClientThread extends Thread {
 
     static final Logger LOGGER = LogManager.getLogger(ClientThread.class);
+    private static final Lock lock = new ReentrantLock();
     private Manager manager;
     private Client client;
     
@@ -24,7 +27,14 @@ public class ClientThread extends Thread {
     public void run() {
         LOGGER.info(String.format("Client %s thread started. %s", 
                 client.getClientId(), client.getLocation()));
-        Taxi taxi = manager.chooseTaxiFor(client);
+        Taxi taxi = null;
+        // do not chooseTaxi until another thread is doing it
+        lock.lock();
+        try {
+            taxi = manager.chooseTaxiFor(client);
+        } finally {
+            lock.unlock();
+        }
         
         while(!taxi.getTaxiState().isReady()) {
             try {
@@ -35,6 +45,6 @@ public class ClientThread extends Thread {
         }
         
         LOGGER.info(String.format("Got into taxi %d. Riding", taxi.getTaxiId()));
-        taxi.setTaxiState(new BusyTaxiState());
+        taxi.setTaxiState(new RidingTaxiState());
     }
 }

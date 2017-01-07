@@ -3,15 +3,12 @@ package by.malinouski.uber.generator;
 import java.util.concurrent.TimeUnit;
 
 
-public class TimeCountGenerator {
+public class TimeCountGenerator extends Thread {
 
-    public TimeCountGenerator() {
-        // TODO Auto-generated constructor stub
-    }
     
-    public static void generateTimeCount() {
+    public void run() {
         int time = 0;
-        while (Thread.activeCount() != 1) {
+        while (true) {
             System.out.println(time++);
             try {
                 TimeUnit.SECONDS.sleep(1);

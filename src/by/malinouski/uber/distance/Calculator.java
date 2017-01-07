@@ -8,12 +8,15 @@
 package by.malinouski.uber.distance;
 
 import java.util.Collection;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import by.malinouski.uber.client.Client;
 import by.malinouski.uber.location.Location;
+import by.malinouski.uber.manager.Manager;
 import by.malinouski.uber.taxi.Taxi;
 
 /**
@@ -25,12 +28,18 @@ public class Calculator {
     final static Logger LOGGER = LogManager.getLogger();
     private static double SPEED = 1000.0; // meters/min 
     private static double EARTH_RADIUS = 6371e3;
-
     
     /*
      * !! Returns null if taxis is empty
      */
     public Taxi calcBestValue(Collection<Taxi> taxis, Client client) {
+//        Condition condition = Manager.getInstance().getCondition();
+//        try {
+//                condition.await();
+//        } catch (InterruptedException e) {
+//            // TODO Auto-generated catch block
+//            e.printStackTrace();
+//        }
         LOGGER.debug("In calcBestValue");
         TimeDistance bestTimeDist = null;
         TimeDistance timeDist = null;

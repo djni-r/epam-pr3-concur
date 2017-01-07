@@ -8,7 +8,7 @@
  */
 package by.malinouski.uber.manager;
 
-import java.util.Collections;
+import java.lang.management.LockInfo;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.locks.Condition;
@@ -35,7 +35,7 @@ public class Manager {
     private static Manager instance = null;
     private static boolean instanceCreated = false; 
     private static Lock lock = new ReentrantLock();
-    private Condition condition = lock.newCondition();
+    private Condition taxiStateChangeCondition = lock.newCondition();
     private Calculator calculator = new Calculator();
     private Set<Taxi> taxis = new HashSet<>();
 
@@ -50,18 +50,26 @@ public class Manager {
                     instance = new Manager();
                     instanceCreated = true;
                 }
-            } catch (Exception e) {
+            } catch (ExceptionInInitializerError e) {
                 LOGGER.fatal("Could not create Manager instance");
                 throw new RuntimeException();
             } finally {
                 lock.unlock();
             }
         }
+        LOGGER.debug("RETURNING INSTANCE " + instance.toString());
         return instance;
     }
     
+    public Lock getLock() {
+        return lock;
+    }
+    
+    public Condition getCondition() {
+        return taxiStateChangeCondition;
+    }
     public int getTaxisSize() {
-        LOGGER.debug(">>>>>>TAXIS SIZE: " + taxis.size());
+        LOGGER.debug("TAXIS SIZE: " + taxis.size());
         return taxis.size();
     }
     
@@ -76,39 +84,40 @@ public class Manager {
     }
     
     public Taxi chooseTaxiFor(Client client) {
+        LOGGER.debug("Manager LOCK is locked: " + ((ReentrantLock) lock).isLocked());
+        lock.lock();
         try {
-            lock.lock();
+            LOGGER.debug("Manager LOCK: " + ((ReentrantLock) lock).getHoldCount());
             LOGGER.debug("In chooseTaxiFor: client location " + client.getLocation());
             
             Taxi taxi = calculator.calcBestValue(taxis, client);
-            TaxiThread thread = new TaxiThread(taxi, client);
-            thread.start();
             
             LOGGER.info(String.format("Client %d got taxi %d.\nTime to arrival %d min", 
                     client.getClientId(), 
                     taxi.getTaxiId(), 
                     // somewhat lengthy calculation of arrival time
-                    taxi.getTaxiState().isAvailable() 
-                        ? calculator.calcTimeDistance(
-                            taxi.getLocation(), client.getLocation())
+                    taxi.getTaxiState().isAvailable()                   // if the taxi was chosen first time
+                        ? calculator.calcTimeDistance(                  // calculate timeDistance between taxi
+                            taxi.getLocation(), client.getLocation())   // current loc and client's one
                           .getMinutes()
                         : calculator.addTimeDistances(
                                 taxi.getTotalTimeDistance(),
                                 calculator.calcTimeDistance(
-                                        taxi.getTargetLocation(), client.getLocation()))
+                                        taxi.getFinalTargetLocation(), client.getLocation()))
                           .getMinutes()
                         ));
                                 
+            TaxiThread thread = new TaxiThread(taxi, client);
             
-            // wait till taxi state and target location before unlocking 
-            try {
-                condition.await();
-            } catch (InterruptedException e) {
-                LOGGER.error(e.getMessage());
-            }
-            LOGGER.debug("RETURNING TAXI " + taxi.getTaxiId());
+            thread.start();
             return taxi;
         } finally {
+            // wait till taxi state change before releasing lock for next thread
+//            try {
+//                taxiStateChangeCondition.await();
+//            } catch (InterruptedException e) {
+//                LOGGER.error(e.getMessage());
+//            }
             LOGGER.debug("UNLOCKING CHOOSETAXIFOR");
             lock.unlock();
         }
@@ -116,13 +125,11 @@ public class Manager {
     }
     
     public void freeCondition(Taxi taxi, Client client) {
+        lock.lock();
         try {
-            lock.lock();
             // taxi's targetLocation is now the client's location
             taxi.setTargetLocation(client.getTargetLocation());
             taxi.setTaxiState(new ArrivingTaxiState());
-            // notify manager that the state is changed
-            condition.signal();
             LOGGER.info("Taxi " + taxi.getTaxiId() + " started moving\n");
         } finally {
             lock.unlock();
