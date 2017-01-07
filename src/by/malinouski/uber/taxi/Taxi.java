@@ -7,11 +7,11 @@
  */
 package by.malinouski.uber.taxi;
 
-import by.malinouski.uber.distance.TimeDistance;
 import by.malinouski.uber.generator.IdGenerator;
 import by.malinouski.uber.location.Location;
 import by.malinouski.uber.taxi.state.AvailableTaxiState;
 import by.malinouski.uber.taxi.state.TaxiState;
+import by.malinouski.uber.timedistance.TimeDistance;
 
 /**
  * 

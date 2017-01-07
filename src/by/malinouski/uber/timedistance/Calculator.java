@@ -5,18 +5,15 @@
  * The theme of the project is Concurrency.
  * The task is to simulate Uber.
  */
-package by.malinouski.uber.distance;
+package by.malinouski.uber.timedistance;
 
 import java.util.Collection;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import by.malinouski.uber.client.Client;
 import by.malinouski.uber.location.Location;
-import by.malinouski.uber.manager.Manager;
 import by.malinouski.uber.taxi.Taxi;
 
 /**
@@ -33,13 +30,6 @@ public class Calculator {
      * !! Returns null if taxis is empty
      */
     public BestValue calcBestValue(Collection<Taxi> taxis, Client client) {
-//        Condition condition = Manager.getInstance().getCondition();
-//        try {
-//                condition.await();
-//        } catch (InterruptedException e) {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//        }
         LOGGER.debug("In calcBestValue");
         TimeDistance bestTimeDist = null;
         TimeDistance timeDist = null;
@@ -61,14 +51,16 @@ public class Calculator {
          * (hence it's in a separate loop. Another version could be
          * to bring this check in the main loop, but it would slow down
          * the main process)
-         * see which one is best with the time left until it will be available
+         * see which one is best considering the timeDistance it will take 
+         * to bring current client to location
          */
         if (bestTaxi == null) {
-            LOGGER.debug("IN if(bestTaxi == null)");
+            LOGGER.debug("In if(bestTaxi == null)");
             for (Taxi taxi : taxis) {
                 timeDist = addTimeDistances(
                         taxi.getTotalTimeDistance(),
                         calcTimeDistance(taxi.getFinalTargetLocation(), client.getLocation()));
+                
                 LOGGER.debug(String.format("CHOOSING: taxi %d, %s", taxi.getTaxiId(), timeDist));
                 if (bestTimeDist == null || timeDist.compareTo(bestTimeDist) < 0) {
                     bestTimeDist = timeDist;
@@ -84,8 +76,6 @@ public class Calculator {
                                 calcTimeDistance(client.getLocation(), 
                                         client.getTargetLocation())));
         
-        LOGGER.debug(String.format("BEST_TAXI_%d_TOTAL_TD: %d", 
-                bestTaxi.getTaxiId(), bestTaxi.getTotalTimeDistance().getMinutes()));
         bestTaxi.setFinalTargetLocation(client.getTargetLocation());
         
         return new BestValue(bestTaxi, bestTimeDist);
@@ -113,8 +103,7 @@ public class Calculator {
     
     
     public int calcArrivalTime(Taxi taxi, Client client) {
-        /*
-         * if the taxi was chosen first time calc time between
+        /* if the taxi was chosen first time calc time between
          * current loc and client's one,
          * if not take to the account other client's time 
          */

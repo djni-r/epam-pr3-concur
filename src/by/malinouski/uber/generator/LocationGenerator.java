@@ -6,6 +6,7 @@ import by.malinouski.uber.location.Location;
 
 public class LocationGenerator {
 
+    // Minsk area
     private static double LAT_LOWER_BOUND = 53.80;
     private static double LAT_UPPER_BOUND = 54.00;
     private static double LON_LOWER_BOUND = 27.30;

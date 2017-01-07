@@ -11,13 +11,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import by.malinouski.uber.client.Client;
-import by.malinouski.uber.distance.Calculator;
 import by.malinouski.uber.location.Location;
 import by.malinouski.uber.manager.Manager;
 import by.malinouski.uber.taxi.state.ArrivingTaxiState;
 import by.malinouski.uber.taxi.state.AvailableTaxiState;
 import by.malinouski.uber.taxi.state.ReadyTaxiState;
-import by.malinouski.uber.taxi.state.RidingTaxiState;
+import by.malinouski.uber.timedistance.Calculator;
 
 /**
  * @author makarymalinouski
@@ -30,12 +29,12 @@ public class TaxiThread extends Thread {
 
     static final Logger LOGGER = LogManager.getLogger(); 
     private static Manager manager = Manager.getInstance();
+    private static final Lock lock = new ReentrantLock(true);
     private Taxi taxi;
-    private static final Lock lock = new ReentrantLock(true);//manager.getLock(); 
     private Client client;
     
     public TaxiThread(Taxi taxi, Client client) {
-        super(Thread.activeCount() + "-" + String.valueOf(taxi.getTaxiId()));
+        super((Thread.activeCount() - 1) + "-" + String.valueOf(taxi.getTaxiId()));
         this.taxi = taxi;
         this.client = client;
     }
@@ -47,12 +46,12 @@ public class TaxiThread extends Thread {
         LOGGER.debug("TAXI THREAD ENTERED LOCK. Count: " 
                      + ((ReentrantLock) lock).getHoldCount());
         
-        // if taxi is already busy signal Manager.chooseTaxiFor(), it can proceed
         if (!taxi.getTaxiState().isAvailable()) {
-            LOGGER.debug("SIGNALLED manager");
+            // if taxi is already busy 
+            // signal Manager.chooseTaxiFor(), it can proceed
             manager.freeCondition();
-            // wait until taxi is available to start towards client
-            // right now if there are 4 clients and 1 taxi, three taxithreads enter here
+            
+            // wait until taxi is available to start off towards client
             while (!taxi.getTaxiState().isAvailable()) {
                 try {
                     TimeUnit.MILLISECONDS.sleep(100);
@@ -60,7 +59,7 @@ public class TaxiThread extends Thread {
                     LOGGER.error(e.getMessage());
                 }
             }
-            // the taxi that was waiting is now startng to arrive
+            // the taxi that was waiting is now starting to arrive
             taxi.setTaxiState(new ArrivingTaxiState());
             lock.unlock();
         } else {
@@ -69,16 +68,19 @@ public class TaxiThread extends Thread {
             // the taxi's state changed, so Manager.chooseTaxiFor() can proceed
             manager.freeCondition();
             lock.unlock();
-            LOGGER.debug("TAXI THREAD RELEASING LOCK");
+            LOGGER.debug("TAXI THREAD RELEASED LOCK");
         }
         
+        // move towards client
         move(taxi.getLocation(), client.getLocation());
-        LOGGER.info(String.format("Picking client %d up\n", client.getClientId()));
+        LOGGER.info(String.format("Taxi %d picking client %d up\n", 
+                          taxi.getTaxiId(), client.getClientId()));
         taxi.setTaxiState(new ReadyTaxiState());
         
+        // bring client to location
         move(taxi.getLocation(), client.getTargetLocation());
-        LOGGER.info(String.format("\nBrought client %d to target location\n",
-                                    client.getClientId()));
+        LOGGER.info(String.format("\nTaxi %d brought client %d to target location\n",
+                          taxi.getTaxiId(), client.getClientId()));         
         taxi.setTaxiState(new AvailableTaxiState());
     }
 
@@ -114,7 +116,6 @@ public class TaxiThread extends Thread {
     private Location deltaLocation(Location from, Location to, int timeWillTake) {
         double deltaLong = (to.getLongitude() - from.getLongitude())/timeWillTake;
         double deltaLat = (to.getLatitude() - from.getLatitude())/timeWillTake;
-        LOGGER.debug("\n-----------DELTA------------\n" + deltaLong + ", " + deltaLat);
         return new Location(deltaLat, deltaLong);
     }
     

@@ -6,6 +6,4 @@ public interface TaxiState {
 
     boolean isReady();
 
-    boolean isDone();
-
 }

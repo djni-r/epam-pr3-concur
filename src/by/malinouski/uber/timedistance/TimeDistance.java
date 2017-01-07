@@ -1,7 +1,7 @@
 /**
  * 
  */
-package by.malinouski.uber.distance;
+package by.malinouski.uber.timedistance;
 
 /**
  * @author makarymalinouski
@@ -60,6 +60,14 @@ public class TimeDistance implements Comparable<TimeDistance> {
             return Integer.valueOf(minutes).compareTo(
                    Integer.valueOf(o.getMinutes()));
         }
+    }
+    
+    /**
+     * !!!!NOT OVERRIDEN!!!!
+     */
+    @Override
+    public int hashCode() {
+        throw new RuntimeException("hashCode not overriden");
     }
     
     @Override
