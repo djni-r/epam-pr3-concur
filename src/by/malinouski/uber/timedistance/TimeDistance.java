@@ -47,7 +47,6 @@ public class TimeDistance implements Comparable<TimeDistance> {
         this.meters = meters;
     }
     
-    
     @Override
     public int compareTo(TimeDistance o) {
         /* if Location was based on real data, than
@@ -60,14 +59,6 @@ public class TimeDistance implements Comparable<TimeDistance> {
             return Integer.valueOf(minutes).compareTo(
                    Integer.valueOf(o.getMinutes()));
         }
-    }
-    
-    /**
-     * !!!!NOT OVERRIDEN!!!!
-     */
-    @Override
-    public int hashCode() {
-        throw new RuntimeException("hashCode not overriden");
     }
     
     @Override

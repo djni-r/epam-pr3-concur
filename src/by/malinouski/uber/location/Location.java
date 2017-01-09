@@ -11,11 +11,8 @@ public class Location {
 
     
     public Location(double latitude, double longitude) {
-//        BigDecimal bigDec = new BigDecimal(longitude);
-        this.longitude = longitude; //bigDec.setScale(DECIMAL_PLACES, RoundingMode.HALF_UP).doubleValue();
-        
-//        BigDecimal bigDec2 = new BigDecimal(latitude);
-        this.latitude = latitude; //bigDec2.setScale(DECIMAL_PLACES, RoundingMode.HALF_UP).doubleValue();
+        this.longitude = longitude; 
+        this.latitude = latitude;
     }
 
     public double getLatitude() {
@@ -59,13 +56,17 @@ public class Location {
     
     @Override
     public int hashCode() {
-        // TODO Auto-generated method stub
-        return super.hashCode();
+        int result = 17;
+        result = 31 * result + 
+                new BigDecimal(latitude).setScale(DECIMAL_PLACES, RoundingMode.HALF_UP).hashCode();
+        result = 31 * result + 
+                new BigDecimal(longitude).setScale(DECIMAL_PLACES, RoundingMode.HALF_UP).hashCode();
+
+        return result;
     }
     
     @Override
     public String toString() {
-        // TODO Auto-generated method stub
         return String.format("Location(%s, %s)", longitude, latitude);
     }
 
