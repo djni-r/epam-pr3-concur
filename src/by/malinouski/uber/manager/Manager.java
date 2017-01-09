@@ -18,6 +18,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import by.malinouski.uber.client.Client;
+import by.malinouski.uber.exception.EmptyTaxiSetException;
+import by.malinouski.uber.exception.NoTaxisAddedException;
 import by.malinouski.uber.taxi.Taxi;
 import by.malinouski.uber.taxi.TaxiThread;
 import by.malinouski.uber.timedistance.BestValue;
@@ -74,12 +76,13 @@ public class Manager {
         }
     }
     
-    public Taxi chooseTaxiFor(Client client) {
+    public Taxi chooseTaxiFor(Client client) throws NoTaxisAddedException {
         lock.lock();
         try {
             LOGGER.debug("In chooseTaxiFor: client location " + client.getLocation());
             
             BestValue bestVal = calculator.calcBestValue(taxis, client);
+            
             Taxi taxi = bestVal.getTaxi();
             
             LOGGER.info(String.format(
@@ -91,14 +94,17 @@ public class Manager {
             
             new TaxiThread(taxi, client).start();
             
-            return taxi;
-        } finally {
-         // wait till taxi state change before releasing lock for next thread
+            // wait till taxi state change before releasing lock for next thread
             try {
                 taxiStateChangeCondition.await();
             } catch (InterruptedException e) {
                 LOGGER.error(e.getMessage());
             }
+            
+            return taxi;
+        } catch(EmptyTaxiSetException e) {
+            throw new NoTaxisAddedException();
+        } finally {
             LOGGER.debug("UNLOCKING CHOOSETAXIFOR");
             lock.unlock();
         }

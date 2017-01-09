@@ -7,12 +7,13 @@
  */
 package by.malinouski.uber.timedistance;
 
-import java.util.Collection;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import by.malinouski.uber.client.Client;
+import by.malinouski.uber.exception.EmptyTaxiSetException;
 import by.malinouski.uber.location.Location;
 import by.malinouski.uber.taxi.Taxi;
 
@@ -29,7 +30,12 @@ public class Calculator {
     /*
      * !! Returns null if taxis is empty
      */
-    public BestValue calcBestValue(Collection<Taxi> taxis, Client client) {
+    public BestValue calcBestValue(Set<Taxi> taxis, Client client) 
+                                        throws EmptyTaxiSetException {
+        LOGGER.debug("TAXIS EMPTY: " + taxis.isEmpty());
+        if (taxis.isEmpty()) {
+            throw new EmptyTaxiSetException();
+        }
         LOGGER.debug("In calcBestValue");
         TimeDistance bestTimeDist = null;
         TimeDistance timeDist = null;
@@ -38,7 +44,8 @@ public class Calculator {
         for (Taxi taxi : taxis) { 
             if (taxi.getTaxiState().isAvailable()
                 && (bestTimeDist == null 
-                    | (timeDist = calcTimeDistance(taxi.getLocation(), client.getLocation()))
+                    | (timeDist = calcTimeDistance(
+                            taxi.getLocation(), client.getLocation()))
                         .compareTo(bestTimeDist) < 0)) {
                 
                 bestTimeDist = timeDist; 
