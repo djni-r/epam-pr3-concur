@@ -10,6 +10,7 @@ package by.malinouski.uber.manager;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -34,7 +35,7 @@ public class Manager {
 
     static final Logger LOGGER = LogManager.getLogger();
     private static Manager instance = null;
-    private static boolean instanceCreated = false; 
+    private static AtomicBoolean instanceCreated = new AtomicBoolean(false); 
     private static Lock lock = new ReentrantLock();
     private Condition taxiStateChangeCondition = lock.newCondition();
     private Calculator calculator = new Calculator();
@@ -44,12 +45,12 @@ public class Manager {
     }
 
     public static Manager getInstance() {
-        if (!instanceCreated) {
+        if (!instanceCreated.get()) {
             lock.lock();
             try {
-                if (!instanceCreated) {
+                if (!instanceCreated.get()) {
                     instance = new Manager();
-                    instanceCreated = true;
+                    instanceCreated.set(true);
                 }
             } catch (ExceptionInInitializerError e) {
                 LOGGER.fatal("Could not create Manager instance");
